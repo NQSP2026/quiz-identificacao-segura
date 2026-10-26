@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Identificação Segura | Hospital Delphina Rinaldi Abdel Aziz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #01579b 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-x: hidden; }
+        .container { width: 100%; max-width: 1080px; padding: 30px; text-align: center; }
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .hospital-name { color: #90caf9; font-size: 16px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+        .logo-pill { font-size: 80px; margin-bottom: 15px; animation: pulse 2s infinite; }
+        .title { color: #ffffff; font-size: 42px; font-weight: 800; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .subtitle { color: #bbdefb; font-size: 20px; margin-bottom: 30px; font-weight: 300; }
+        .badge { display: inline-block; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 50px; padding: 12px 30px; color: #ffffff; font-size: 18px; margin-bottom: 25px; }
+        .form-group { margin-bottom: 18px; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .form-label { color: #bbdefb; font-size: 15px; margin-bottom: 6px; display: block; font-weight: 600; }
+        .form-input, .form-select { width: 100%; padding: 14px 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 12px; background: rgba(255,255,255,0.1); color: #ffffff; font-size: 16px; outline: none; transition: border-color 0.3s; }
+        .form-input:focus, .form-select:focus { border-color: #69f0ae; }
+        .form-input::placeholder { color: rgba(255,255,255,0.5); }
+        .form-select option { background: #1a237e; color: #ffffff; }
+        .btn-start { background: linear-gradient(135deg, #00e676, #00c853); color: #1b5e20; border: none; padding: 20px 60px; font-size: 24px; font-weight: 700; border-radius: 60px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,230,118,0.4); transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 2px; margin-top: 15px; }
+        .btn-start:hover, .btn-start:active { transform: scale(1.05); box-shadow: 0 12px 40px rgba(0,230,118,0.6); }
+        .touch-hint { color: rgba(255,255,255,0.6); font-size: 15px; margin-top: 15px; animation: pulse 2s infinite; }
+        .progress-bar { width: 100%; height: 12px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #00e676, #69f0ae); border-radius: 10px; transition: width 0.5s ease; }
+        .question-counter { color: #bbdefb; font-size: 18px; margin-bottom: 12px; font-weight: 600; }
+        .question-category { display: inline-block; background: rgba(255,193,7,0.2); border: 1px solid rgba(255,193,7,0.5); color: #ffd54f; padding: 8px 20px; border-radius: 30px; font-size: 16px; margin-bottom: 20px; font-weight: 600; }
+        .question-text { color: #ffffff; font-size: 26px; font-weight: 700; line-height: 1.4; margin-bottom: 30px; padding: 0 10px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 900px; margin: 0 auto; }
+        .option-btn { background: rgba(255,255,255,0.1); border: 3px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 22px 18px; color: #ffffff; font-size: 18px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; text-align: center; line-height: 1.4; }
+        .option-btn:hover, .option-btn:active { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.6); transform: scale(1.02); }
+        .option-btn.selected { background: rgba(66,165,245,0.3); border-color: #42a5f5; }
+        .option-btn.disabled { pointer-events: none; opacity: 0.6; }
+        .option-letter { display: inline-block; width: 34px; height: 34px; line-height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); margin-right: 10px; font-weight: 700; font-size: 15px; }
+        .btn-next { background: linear-gradient(135deg, #42a5f5, #1e88e5); color: #ffffff; border: none; padding: 16px 45px; font-size: 18px; font-weight: 600; border-radius: 50px; cursor: pointer; margin-top: 25px; box-shadow: 0 6px 20px rgba(30,136,229,0.4); transition: all 0.3s ease; display: none; }
+        .btn-next:hover, .btn-next:active { transform: scale(1.05); }
+        .btn-next.show { display: inline-block; }
+        .result-icon { font-size: 90px; margin-bottom: 15px; }
+        .result-score { font-size: 64px; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+        .result-label { font-size: 22px; color: #bbdefb; margin-bottom: 25px; }
+        .result-message { font-size: 26px; color: #ffffff; font-weight: 600; margin-bottom: 12px; }
+        .result-detail { font-size: 18px; color: #90caf9; margin-bottom: 25px; line-height: 1.6; }
+        .score-bar { width: 80%; max-width: 500px; height: 18px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 0 auto 30px; overflow: hidden; }
+        .score-fill { height: 100%; border-radius: 10px; transition: width 1.5s ease; }
+        .feedback-section { text-align: left; max-width: 800px; margin: 0 auto 30px; }
+        .feedback-title { color: #ffffff; font-size: 22px; font-weight: 700; margin-bottom: 15px; text-align: center; }
+        .feedback-card { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 18px; margin-bottom: 12px; border-left: 5px solid; }
+        .feedback-card.correct { border-left-color: #00e676; }
+        .feedback-card.wrong { border-left-color: #f44336; }
+        .feedback-card .fb-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .feedback-card .fb-icon { font-size: 24px; }
+        .feedback-card .fb-question { color: #ffffff; font-size: 15px; font-weight: 600; }
+        .feedback-card .fb-answer { font-size: 14px; margin-top: 6px; line-height: 1.5; }
+        .feedback-card.correct .fb-answer { color: #a5d6a7; }
+        .feedback-card.wrong .fb-answer { color: #ef9a9a; }
+        .feedback-card .fb-explanation { color: #90caf9; font-size: 13px; margin-top: 6px; font-style: italic; }
+        .btn-restart { background: linear-gradient(135deg, #ffd54f, #ffb300); color: #4e342e; border: none; padding: 20px 60px; font-size: 22px; font-weight: 700; border-radius: 60px; cursor: pointer; box-shadow: 0 8px 30px rgba(255,179,0,0.4); transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-restart:hover, .btn-restart:active { transform: scale(1.05); }
+        .admin-btn { position: fixed; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s; z-index: 100; }
+        .admin-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+        .dashboard { text-align: left; max-width: 1000px; margin: 0 auto; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .dash-title { color: #ffffff; font-size: 30px; font-weight: 700; }
+        .dash-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        .dash-btn { padding: 12px 24px; border-radius: 10px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .dash-btn.export { background: #00e676; color: #1b5e20; }
+        .dash-btn.clear { background: #f44336; color: #fff; }
+        .dash-btn.back { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+        .dash-btn:hover { transform: scale(1.03); }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+        .kpi-card { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 20px; text-align: center; }
+        .kpi-value { font-size: 34px; font-weight: 800; color: #ffffff; margin-bottom: 5px; }
+        .kpi-label { font-size: 13px; color: #90caf9; font-weight: 500; }
+        .chart-section { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 25px; margin-bottom: 20px; }
+        .chart-title { color: #ffffff; font-size: 18px; font-weight: 600; margin-bottom: 15px; }
+        .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+        .bar-row { display: flex; align-items: center; gap: 12px; }
+        .bar-label { color: #bbdefb; font-size: 13px; min-width: 180px; text-align: right; }
+        .bar-track { flex: 1; height: 26px; background: rgba(255,255,255,0.1); border-radius: 13px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; border-radius: 13px; transition: width 1s ease; }
+        .bar-value { color: #ffffff; font-size: 12px; font-weight: 700; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+        .table-section { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: rgba(255,255,255,0.15); color: #ffffff; padding: 10px 12px; text-align: left; font-weight: 600; }
+        .data-table td { padding: 8px 12px; color: #bbdefb; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .data-table tr:hover td { background: rgba(255,255,255,0.05); }
+        .nqsp-footer { position: fixed; bottom: 15px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.4); font-size: 13px; }
+        .floating-icons { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: -1; }
+        .floating-icon { position: absolute; font-size: 30px; opacity: 0.08; animation: float 18s infinite linear; }
+        @keyframes float { 0% { transform: translateY(100vh) rotate(0deg); } 100% { transform: translateY(-100px) rotate(360deg); } }
+        .password-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
+        .password-modal.show { display: flex; }
+        .password-box { background: #1a237e; border: 2px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 40px; text-align: center; max-width: 400px; width: 90%; }
+        .password-box h3 { color: #fff; margin-bottom: 20px; font-size: 22px; }
+        .password-box input { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; font-size: 18px; text-align: center; margin-bottom: 15px; }
+        .password-box .error { color: #f44336; font-size: 14px; margin-bottom: 10px; display: none; }
+        .scroll-hint { color: rgba(255,255,255,0.5); font-size: 15px; margin: 15px 0; animation: pulse 2s infinite; }
+    </style>
+</head>
+<body>
+    <div class="floating-icons">
+        <div class="floating-icon" style="left: 10%; animation-delay: 0s;">💊</div>
+        <div class="floating-icon" style="left: 25%; animation-delay: 3s;">🏥</div>
+        <div class="floating-icon" style="left: 40%; animation-delay: 6s;">✅</div>
+        <div class="floating-icon" style="left: 55%; animation-delay: 9s;">🔒</div>
+        <div class="floating-icon" style="left: 70%; animation-delay: 12s;">💉</div>
+        <div class="floating-icon" style="left: 85%; animation-delay: 2s;">🩺</div>
+    </div>
+
+    <button class="admin-btn" onclick="showPasswordModal()">📊 Indicadores</button>
+
+    <div class="password-modal" id="password-modal">
+        <div class="password-box">
+            <h3>🔒 Acesso Restrito</h3>
+            <p style="color:#90caf9; margin-bottom:20px; font-size:14px;">Digite a senha para acessar os indicadores</p>
+            <input type="password" id="admin-password" placeholder="Senha" onkeypress="if(event.key==='Enter')checkPassword()">
+            <div class="error" id="password-error">Senha incorreta</div>
+            <div style="display:flex; gap:10px;">
+                <button class="dash-btn back" onclick="hidePasswordModal()" style="flex:1;">Cancelar</button>
+                <button class="dash-btn export" onclick="checkPassword()" style="flex:1;">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="screen active" id="screen-start">
+            <div class="hospital-name">🏥 Hospital Delphina Rinaldi Abdel Aziz</div>
+            <div class="logo-pill">💊</div>
+            <div class="title">Quiz da Identificação Segura</div>
+            <div class="subtitle">Teste seus conhecimentos sobre a Meta 01</div>
+            <div class="badge">🎯 10 perguntas &bull; Toque para responder</div>
+            <div class="form-group">
+                <label class="form-label">Seu nome (ou matrícula):</label>
+                <input type="text" class="form-input" id="input-name" placeholder="Digite aqui...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Setor:</label>
+                <select class="form-select" id="input-sector">
+                    <option value="">Selecione seu setor</option>
+                    <option value="UTI A">UTI A</option>
+                    <option value="UTI B">UTI B</option>
+                    <option value="UTI C">UTI C</option>
+                    <option value="UTI D">UTI D</option>
+                    <option value="UTI H">UTI H</option>
+                    <option value="UTI 20">UTI 20</option>
+                    <option value="UTI 30">UTI 30</option>
+                    <option value="2º Andar A">2º Andar A</option>
+                    <option value="2º Andar B">2º Andar B</option>
+                    <option value="3º Andar A">3º Andar A</option>
+                    <option value="3º Andar B">3º Andar B</option>
+                    <option value="4º Andar A">4º Andar A</option>
+                    <option value="4º Andar B">4º Andar B</option>
+                    <option value="5º Andar A">5º Andar A</option>
+                    <option value="5º Andar B">5º Andar B</option>
+                    <option value="6º Andar">6º Andar</option>
+                    <option value="Hiperbárica">Hiperbárica</option>
+                    <option value="Centro Cirúrgico">Centro Cirúrgico</option>
+                    <option value="SADT">SADT</option>
+                    <option value="Reabilitação">Reabilitação</option>
+                    <option value="Ambulatório">Ambulatório</option>
+                    <option value="Transplante">Transplante</option>
+                    <option value="SVP">SVP</option>
+                    <option value="SVA">SVA</option>
+                    <option value="AGT">AGT</option>
+                    <option value="Laboratório">Laboratório</option>
+                    <option value="NQSP">NQSP</option>
+                    <option value="SCIH">SCIH</option>
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Hospital Dia">Hospital Dia</option>
+                    <option value="Farmácia">Farmácia</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Categoria profissional:</label>
+                <select class="form-select" id="input-role">
+                    <option value="">Selecione sua categoria</option>
+                    <option value="Enfermeiro(a)">Enfermeiro(a)</option>
+                    <option value="Técnico(a) de Enfermagem">Técnico(a) de Enfermagem</option>
+                    <option value="Médico(a)">Médico(a)</option>
+                    <option value="Fisioterapeuta">Fisioterapeuta</option>
+                    <option value="Biomédico(a)">Biomédico(a)</option>
+                    <option value="Nutricionista">Nutricionista</option>
+                    <option value="Fonoaudiólogo(a)">Fonoaudiólogo(a)</option>
+                    <option value="Assistente Administrativo">Assistente Administrativo</option>
+                    <option value="Escriturário(a)">Escriturário(a)</option>
+                    <option value="Farmacêutico(a)">Farmacêutico(a)</option>
+                    <option value="Assistente Social">Assistente Social</option>
+                    <option value="Psicólogo(a)">Psicólogo(a)</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Turno:</label>
+                <select class="form-select" id="input-shift">
+                    <option value="">Selecione seu turno</option>
+                    <option value="Diurno">Diurno</option>
+                    <option value="Noturno">Noturno</option>
+                </select>
+            </div>
+            <button class="btn-start" onclick="startQuiz()">INICIAR QUIZ</button>
+            <div class="touch-hint">👆 Preencha os campos e toque em INICIAR</div>
+        </div>
+
+        <div class="screen" id="screen-quiz">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="question-counter" id="question-counter"></div>
+            <div class="question-category" id="question-category"></div>
+            <div class="question-text" id="question-text"></div>
+            <div class="options-grid" id="options-grid"></div>
+            <button class="btn-next" id="btn-next" onclick="nextQuestion()">PRÓXIMA ➜</button>
+        </div>
+
+        <div class="screen" id="screen-result">
+            <div class="result-icon" id="result-icon"></div>
+            <div class="result-score" id="result-score"></div>
+            <div class="result-label">acertos</div>
+            <div class="score-bar"><div class="score-fill" id="score-fill"></div></div>
+            <div class="result-message" id="result-message"></div>
+            <div class="result-detail" id="result-detail"></div>
+            <div class="scroll-hint">👇 Role para baixo para ver o feedback de cada pergunta</div>
+            <div class="feedback-section" id="feedback-section">
+                <div class="feedback-title">📋 Revisão das Respostas</div>
+                <div id="feedback-cards"></div>
+            </div>
+            <button class="btn-restart" onclick="restartQuiz()">🔄 JOGAR NOVAMENTE</button>
+        </div>
+
+        <div class="screen" id="screen-dashboard">
+            <div class="dashboard">
+                <div class="dash-header">
+                    <div class="dash-title">📊 Painel de Indicadores — Hospital Delphina Rinaldi Abdel Aziz</div>
+                    <div class="dash-actions">
+                        <button class="dash-btn export" onclick="exportCSV()">📥 Exportar CSV</button>
+                        <button class="dash-btn clear" onclick="clearData()">🗑️ Limpar Dados</button>
+                        <button class="dash-btn back" onclick="backToStart()">← Voltar</button>
+                    </div>
+                </div>
+                <div class="kpi-grid" id="kpi-grid"></div>
+                <div class="chart-section"><div class="chart-title">📈 Taxa de Acerto por Tema</div><div class="bar-chart" id="chart-themes"></div></div>
+                <div class="chart-section"><div class="chart-title">🏥 Participação por Setor</div><div class="bar-chart" id="chart-sectors"></div></div>
+                <div class="chart-section"><div class="chart-title">👥 Participação por Categoria</div><div class="bar-chart" id="chart-roles"></div></div>
+                <div class="chart-section"><div class="chart-title">🌙 Participação por Turno</div><div class="bar-chart" id="chart-shifts"></div></div>
+                <div class="chart-section"><div class="chart-title">❌ Top 5 Perguntas Mais Erradas</div><div class="bar-chart" id="chart-errors"></div></div>
+                <div class="chart-section">
+                    <div class="chart-title">📋 Últimas Participações</div>
+                    <div class="table-section">
+                        <table class="data-table">
+                            <thead><tr><th>Data/Hora</th><th>Nome</th><th>Setor</th><th>Categoria</th><th>Turno</th><th>Acertos</th><th>%</th></tr></thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nqsp-footer">Hospital Delphina Rinaldi Abdel Aziz | Identificação Segura | NQSP — Núcleo de Qualidade e Segurança do Paciente</div>
+
+    <script>
+        var ADMIN_PASSWORD = "nqsp2026";
+
+        var allQuestions = [
+            {
+                id: "q1", category: "Identificadores",
+                question: "Quais são os 3 identificadores obrigatórios do paciente?",
+                options: ["Nome, leito e prontuário", "Nome completo, data de nascimento e filiação", "Nome, CPF e convênio", "Nome, idade e setor"],
+                correct: 1,
+                explanation: "Os 3 identificadores obrigatórios são: nome completo, data de nascimento e filiação (nome da mãe)."
+            },
+            {
+                id: "q2", category: "Alerta de Segurança",
+                question: "O número do leito pode ser usado como identificador do paciente?",
+                options: ["Sim, sempre", "Apenas em emergências", "NUNCA", "Somente na UTI"],
+                correct: 2,
+                explanation: "Número de leito NUNCA é identificador! Pacientes mudam de leito, mas a identidade permanece."
+            },
+            {
+                id: "q3", category: "Momentos Críticos",
+                question: "Quais são os 5 momentos em que é OBRIGATÓRIO conferir a identificação do paciente?",
+                options: ["Apenas medicação e cirurgias", "Medicação, coleta de exames, procedimentos/cirurgias, transfusão sanguínea e entrega de dieta", "Somente em procedimentos invasivos", "Apenas quando há troca de plantão"],
+                correct: 1,
+                explanation: "Os 5 momentos obrigatórios são: 1) Administração de medicamentos, 2) Coleta de exames/amostras, 3) Procedimentos/cirurgias, 4) Transfusão sanguínea, 5) Entrega de dieta."
+            },
+            {
+                id: "q4", category: "Momentos Críticos",
+                question: "A conferência de identificação é obrigatória antes da entrega de dieta?",
+                options: ["Não, dieta não é medicamento", "Apenas para dietas especiais", "SIM, sempre!", "Apenas para pacientes diabéticos"],
+                correct: 2,
+                explanation: "SIM! A entrega de dieta é um dos 5 momentos críticos. Dieta errada pode causar reações alérgicas, broncoaspiração e outros danos."
+            },
+            {
+                id: "q5", category: "Boas Práticas",
+                question: "Qual a forma CORRETA de confirmar a identidade do paciente?",
+                options: ["Perguntar: 'Você é o João Silva?'", "Pedir que o paciente DIGA seu nome completo", "Conferir apenas o prontuário", "Perguntar ao acompanhante"],
+                correct: 1,
+                explanation: "Peça ao paciente que DIGA o nome dele. Nunca use perguntas fechadas como 'Você é o João?' — pacientes podem confirmar por engano."
+            },
+            {
+                id: "q6", category: "Caso Clínico",
+                question: "Paciente chega ao setor SEM pulseira de identificação. O que fazer?",
+                options: ["Administrar o medicamento e depois resolver", "Perguntar o nome e seguir", "PARAR e providenciar nova pulseira ANTES de qualquer cuidado", "Usar o número do leito temporariamente"],
+                correct: 2,
+                explanation: "PARE! Paciente sem pulseira = paciente sem identidade. Providencie nova pulseira com os 3 identificadores ANTES de qualquer cuidado."
+            },
+            {
+                id: "q7", category: "Mito ou Verdade",
+                question: "'Eu já conheço esse paciente há dias, não preciso conferir a pulseira.' Isso é...",
+                options: ["Verdade — a experiência conta", "Mito — SEMPRE confira o dispositivo", "Depende do tempo de internação", "Verdade — se for o mesmo profissional"],
+                correct: 1,
+                explanation: "MITO! A conferência é com o DISPOSITIVO (pulseira), não com a memória. Erros acontecem justamente quando confiamos demais."
+            },
+            {
+                id: "q8", category: "Segurança",
+                question: "Dois pacientes com o mesmo nome estão no setor. Qual a conduta CORRETA?",
+                options: ["Usar o número do leito para diferenciar", "Conferir os 3 identificadores completos de cada um", "Colocar um alerta apenas no prontuário", "Trocar um deles de setor"],
+                correct: 1,
+                explanation: "Confira TODOS os 3 identificadores (nome + data de nascimento + filiação). Por isso existem múltiplos identificadores — para diferenciar homônimos!"
+            },
+            {
+                id: "q9", category: "Responsabilidade",
+                question: "A identificação segura é responsabilidade de quem?",
+                options: ["Apenas da enfermagem", "Do médico responsável", "Da recepção na admissão", "De TODOS os profissionais, em TODOS os contatos"],
+                correct: 3,
+                explanation: "A identificação segura é responsabilidade de TODOS os profissionais que prestam cuidado, em TODOS os contatos com o paciente."
+            },
+            {
+                id: "q10", category: "Paciente Desconhecido",
+                question: "Paciente inconsciente, sem documentos e sem acompanhante é admitido. Como deve ser identificado na pulseira?",
+                options: ["Deixar sem pulseira até descobrir o nome", "DESCAM + características físicas (se não souber o suposto nome) ou DESCAM + suposto nome", "Usar apenas o número do leito", "Registrar como 'Paciente Desconhecido' sem mais dados"],
+                correct: 1,
+                explanation: "Na instituição, pacientes sem identificação recebem a sigla DESCAM + características físicas (quando não há suposto nome e está sem documento) ou DESCAM + suposto nome (quando o paciente informa um nome mas não possui documento). Isso garante rastreabilidade até a identificação definitiva."
+            }
+        ];
+
+        var shuffledQuestions = [];
+        var currentQuestion = 0, score = 0, answered = false, currentAnswers = [], participant = {};
+
+        function shuffleArray(arr) {
+            var shuffled = arr.slice();
+            for (var i = shuffled.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = shuffled[i];
+                shuffled[i] = shuffled[j];
+                shuffled[j] = temp;
+            }
+            return shuffled;
+        }
+
+        function getResults() { var d = localStorage.getItem('quiz_results_delphina'); return d ? JSON.parse(d) : []; }
+        function saveResult(r) { var results = getResults(); results.push(r); localStorage.setItem('quiz_results_delphina', JSON.stringify(results)); }
+
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); }); document.getElementById(id).classList.add('active'); window.scrollTo(0, 0); }
+
+        function startQuiz() {
+            var name = document.getElementById('input-name').value.trim();
+            var sector = document.getElementById('input-sector').value;
+            var role = document.getElementById('input-role').value;
+            var shift = document.getElementById('input-shift').value;
+            if (!name || !sector || !role || !shift) { alert('Por favor, preencha todos os campos.'); return; }
+            participant = { name: name, sector: sector, role: role, shift: shift };
+            shuffledQuestions = shuffleArray(allQuestions);
+            currentQuestion = 0; score = 0; answered = false; currentAnswers = [];
+            showScreen('screen-quiz'); loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            var q = shuffledQuestions[currentQuestion];
+            document.getElementById('progress-fill').style.width = ((currentQuestion) / shuffledQuestions.length * 100) + '%';
+            document.getElementById('question-counter').textContent = 'Pergunta ' + (currentQuestion + 1) + ' de ' + shuffledQuestions.length;
+            document.getElementById('question-category').textContent = q.category;
+            document.getElementById('question-text').textContent = q.question;
+            var letters = ['A', 'B', 'C', 'D'];
+            var html = '';
+            q.options.forEach(function(opt, i) { html += '<div class="option-btn" onclick="selectAnswer(' + i + ')" id="option-' + i + '"><span class="option-letter">' + letters[i] + '</span> ' + opt + '</div>'; });
+            document.getElementById('options-grid').innerHTML = html;
+            document.getElementById('btn-next').classList.remove('show');
+        }
+
+        function selectAnswer(index) {
+            if (answered) return; answered = true;
+            var q = shuffledQuestions[currentQuestion];
+            var isCorrect = index === q.correct;
+            currentAnswers.push({ questionId: q.id, question: q.question, category: q.category, correct: isCorrect, selectedIndex: index, correctIndex: q.correct, selectedAnswer: q.options[index], correctAnswer: q.options[q.correct], explanation: q.explanation });
+            if (isCorrect) score++;
+            document.querySelectorAll('.option-btn').forEach(function(btn) { btn.classList.add('disabled'); });
+            document.getElementById('option-' + index).classList.add('selected');
+            var nextBtn = document.getElementById('btn-next');
+            nextBtn.textContent = currentQuestion === shuffledQuestions.length - 1 ? 'VER RESULTADO ➜' : 'PRÓXIMA ➜';
+            nextBtn.classList.add('show');
+        }
+
+        function nextQuestion() { currentQuestion++; if (currentQuestion >= shuffledQuestions.length) finishQuiz(); else loadQuestion(); }
+
+        function finishQuiz() {
+            saveResult({ timestamp: new Date().toISOString(), name: participant.name, sector: participant.sector, role: participant.role, shift: participant.shift, score: score, total: shuffledQuestions.length, percentage: Math.round((score / shuffledQuestions.length) * 100), answers: currentAnswers.map(function(a) { return { question: allQuestions.findIndex(function(q) { return q.id === a.questionId; }), correct: a.correct, category: a.category }; }) });
+            showResult();
+        }
+
+        function showResult() {
+            showScreen('screen-result');
+            var pct = Math.round((score / shuffledQuestions.length) * 100);
+            document.getElementById('result-score').textContent = score + '/' + shuffledQuestions.length;
+            var fill = document.getElementById('score-fill');
+            var color = pct >= 80 ? '#00e676' : pct >= 60 ? '#ffd54f' : pct >= 40 ? '#ff9800' : '#f44336';
+            fill.style.background = color;
+            setTimeout(function() { fill.style.width = pct + '%'; }, 100);
+            var icon, msg, detail;
+            if (pct === 100) { icon = '🏆'; msg = 'PERFEITO! Você é um campeão da segurança!'; detail = 'Parabéns! Você domina a identificação segura.'; }
+            else if (pct >= 80) { icon = '🌟'; msg = 'Excelente! Quase perfeito!'; detail = 'Ótimo conhecimento! Veja abaixo os pontos que errou.'; }
+            else if (pct >= 60) { icon = '💪'; msg = 'Bom trabalho! Mas pode melhorar.'; detail = 'Alguns pontos precisam de reforço. Confira abaixo.'; }
+            else if (pct >= 40) { icon = '📚'; msg = 'Atenção! Hora de revisar.'; detail = 'Revise o protocolo! Veja o feedback abaixo.'; }
+            else { icon = '⚠️'; msg = 'Precisamos conversar!'; detail = 'Procure o NQSP para tirar dúvidas. Veja o feedback abaixo.'; }
+            document.getElementById('result-icon').textContent = icon;
+            document.getElementById('result-message').textContent = msg;
+            document.getElementById('result-detail').textContent = detail;
+
+            var cardsHtml = '';
+            currentAnswers.forEach(function(a, i) {
+                var status = a.correct ? 'correct' : 'wrong';
+                var icon = a.correct ? '✅' : '❌';
+                var answerText = '';
+                if (a.correct) {
+                    answerText = '<span style="color:#69f0ae; font-weight:600;">✔ Você acertou!</span>';
+                } else {
+                    answerText = '<span style="color:#ef9a9a;">❌ Você errou esta questão.</span>';
+                }
+                cardsHtml += '<div class="feedback-card ' + status + '">' +
+                    '<div class="fb-header"><span class="fb-icon">' + icon + '</span><span class="fb-question">' + (i+1) + '. ' + a.question + '</span></div>' +
+                    '<div class="fb-answer">' + answerText + '</div>' +
+                    '<div class="fb-explanation">💡 ' + a.explanation + '</div>' +
+                    '</div>';
+            });
+            document.getElementById('feedback-cards').innerHTML = cardsHtml;
+        }
+
+        function restartQuiz() { ['input-name','input-sector','input-role','input-shift'].forEach(function(id) { document.getElementById(id).value = ''; }); showScreen('screen-start'); }
+
+        function showPasswordModal() { document.getElementById('password-modal').classList.add('show'); document.getElementById('admin-password').value = ''; document.getElementById('password-error').style.display = 'none'; }
+        function hidePasswordModal() { document.getElementById('password-modal').classList.remove('show'); }
+        function checkPassword() { if (document.getElementById('admin-password').value === ADMIN_PASSWORD) { hidePasswordModal(); showDashboard(); } else { document.getElementById('password-error').style.display = 'block'; } }
+
+        function showDashboard() { showScreen('screen-dashboard'); renderDashboard(); }
+        function backToStart() { showScreen('screen-start'); }
+
+        function renderDashboard() {
+            var results = getResults();
+            var total = results.length;
+            var avg = total > 0 ? Math.round(results.reduce(function(s, r) { return s + r.percentage; }, 0) / total) : 0;
+            var above80 = total > 0 ? Math.round(results.filter(function(r) { return r.percentage >= 80; }).length / total * 100) : 0;
+            var sectorSet = {};
+            results.forEach(function(r) { sectorSet[r.sector] = true; });
+            var sectors = Object.keys(sectorSet).length;
+
+            document.getElementById('kpi-grid').innerHTML =
+                '<div class="kpi-card"><div class="kpi-value">' + total + '</div><div class="kpi-label">Participações</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + avg + '%</div><div class="kpi-label">Média de Acerto</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + above80 + '%</div><div class="kpi-label">Aprovados (≥80%)</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + sectors + '</div><div class="kpi-label">Setores</div></div>';
+
+            renderBarChart('chart-themes', results, 'themes');
+            renderBarChart('chart-sectors', results, 'sectors');
+            renderBarChart('chart-roles', results, 'roles');
+            renderBarChart('chart-shifts', results, 'shifts');
+            renderBarChart('chart-errors', results, 'errors');
+            renderTable(results);
+        }
+
+        function renderBarChart(containerId, results, type) {
+            var data = {};
+            if (type === 'themes') {
+                results.forEach(function(r) { r.answers.forEach(function(a) { if (!data[a.category]) data[a.category] = {c:0,t:0}; data[a.category].t++; if (a.correct) data[a.category].c++; }); });
+                var html = '';
+                Object.entries(data).sort(function(a,b) { return a[0].localeCompare(b[0]); }).forEach(function(entry) { var k = entry[0], v = entry[1]; var pct = Math.round(v.c/v.t*100); var color = pct >= 80 ? '#00e676' : pct >= 60 ? '#ffd54f' : '#f44336'; html += '<div class="bar-row"><div class="bar-label">' + k + '</div><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + ';"></div><div class="bar-value">' + pct + '%</div></div></div>'; });
+                document.getElementById(containerId).innerHTML = html || '<p style="color:#90caf9;">Sem dados.</p>';
+            } else if (type === 'errors') {
+                results.forEach(function(r) { r.answers.forEach(function(a) { if (!a.correct) { var q = allQuestions[a.question].question.substring(0,55)+'...'; data[q] = (data[q]||0)+1; } }); });
+                var html = ''; var vals = Object.values(data); var max = vals.length > 0 ? Math.max.apply(null, vals) : 1;
+                Object.entries(data).sort(function(a,b) { return b[1]-a[1]; }).slice(0,5).forEach(function(entry) { var k = entry[0], v = entry[1]; html += '<div class="bar-row"><div class="bar-label">' + k + '</div><div class="bar-track"><div class="bar-fill" style="width:' + Math.round(v/max*100) + '%;background:#f44336;"></div><div class="bar-value">' + v + '</div></div></div>'; });
+                document.getElementById(containerId).innerHTML = html || '<p style="color:#90caf9;">Sem erros.</p>';
+            } else {
+                var field = type === 'sectors' ? 'sector' : type === 'roles' ? 'role' : 'shift';
+                results.forEach(function(r) { data[r[field]] = (data[r[field]]||0)+1; });
+                var html = ''; var vals = Object.values(data); var max = vals.length > 0 ? Math.max.apply(null, vals) : 1;
+                var colors = { sectors: '#42a5f5', roles: '#ab47bc', shifts: '#ffd54f' };
+                Object.entries(data).sort(function(a,b) { return b[1]-a[1]; }).forEach(function(entry) { var k = entry[0], v = entry[1]; var color = type === 'shifts' ? (k === 'Diurno' ? '#ffd54f' : '#7c4dff') : colors[type]; html += '<div class="bar-row"><div class="bar-label">' + k + '</div><div class="bar-track"><div class="bar-fill" style="width:' + Math.round(v/max*100) + '%;background:' + color + ';"></div><div class="bar-value">' + v + '</div></div></div>'; });
+                document.getElementById(containerId).innerHTML = html || '<p style="color:#90caf9;">Sem dados.</p>';
+            }
+        }
+
+        function renderTable(results) {
+            var html = '';
+            results.slice(-20).reverse().forEach(function(r) {
+                var d = new Date(r.timestamp); var ds = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+                var color = r.percentage >= 80 ? '#00e676' : r.percentage >= 60 ? '#ffd54f' : '#f44336';
+                html += '<tr><td>' + ds + '</td><td>' + r.name + '</td><td>' + r.sector + '</td><td>' + r.role + '</td><td>' + r.shift + '</td><td>' + r.score + '/' + r.total + '</td><td style="color:' + color + ';font-weight:700;">' + r.percentage + '%</td></tr>';
+            });
+            document.getElementById('table-body').innerHTML = html || '<tr><td colspan="7" style="text-align:center;">Nenhum registro.</td></tr>';
+        }
+
+        function exportCSV() {
+            var results = getResults();
+            if (!results.length) { alert('Nenhum dado.'); return; }
+            var csv = 'Data/Hora;Nome;Setor;Categoria;Turno;Acertos;Total;Percentual';
+            allQuestions.forEach(function(q,i) { csv += ';P'+(i+1)+' ('+q.category+')'; });
+            csv += '\n';
+            results.forEach(function(r) {
+                var d = new Date(r.timestamp);
+                csv += d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR') + ';' + r.name + ';' + r.sector + ';' + r.role + ';' + r.shift + ';' + r.score + ';' + r.total + ';' + r.percentage + '%';
+                r.answers.forEach(function(a) { csv += ';' + (a.correct ? 'Certo' : 'Errado'); });
+                csv += '\n';
+            });
+            var blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8;'});
+            var link = document.createElement('a'); link.href = URL.createObjectURL(blob);
+            link.download = 'quiz_delphina_' + new Date().toISOString().slice(0,10) + '.csv'; link.click();
+        }
+
+        function clearData() { if (confirm('⚠️ APAGAR todos os dados?')) { if (confirm('Confirma exclusão?')) { localStorage.removeItem('quiz_results_delphina'); renderDashboard(); alert('✅ Dados apagados.'); } } }
+
+        var idleTimer;
+        document.addEventListener('touchstart', resetIdle);
+        document.addEventListener('click', resetIdle);
+        function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(function() { if (!document.getElementById('screen-dashboard').classList.contains('active')) restartQuiz(); }, 90000); }
+        resetIdle();
+    </script>
+</body>
+</html>
+
